@@ -1,5 +1,5 @@
 import cv2
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse, StreamingResponse
 from ultralytics import YOLO
 
@@ -38,6 +38,10 @@ def generate_frames():
 def video_feed():
     return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
+
 @app.get("/", response_class=HTMLResponse)
 def index():
     return """
@@ -45,6 +49,7 @@ def index():
     <html>
     <head>
         <title>Live Machine Defect Detection Feed</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
         <style>
             body { background: #0f172a; color: #f8fafc; font-family: sans-serif; text-align: center; padding: 24px; }
             img { max-width: 90%; border: 2px solid #334155; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
