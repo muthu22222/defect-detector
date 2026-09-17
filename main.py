@@ -7,13 +7,17 @@ from ultralytics import YOLO
 app = FastAPI(title="Defect Detection Live Stream")
 
 model = YOLO("defect_best.pt")
-camera = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+if not camera.isOpened():
+    camera = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+if not camera.isOpened():
+    camera = cv2.VideoCapture(0)
 
 def generate_frames():
     while True:
         success, frame = camera.read()
         if not success:
-            break
+            continue
 
         results = model(frame, verbose=False)
 
