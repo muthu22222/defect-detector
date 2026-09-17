@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Defect Vision AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #090d16;
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 1160px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .title-group h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .title-group p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .model-select {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+        }
+        .model-select:focus {
+            border-color: #38bdf8;
+        }
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #22c55e;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Navigation Tabs */
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tab-btn:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tab-btn.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            font-weight: 600;
+        }
+
+        /* Main Workspace layout */
+        .defect-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 24px;
+            width: 100%;
+        }
+        @media (max-width: 900px) {
+            .defect-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-box {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .video-box h3 {
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .viewport-wrapper {
+            position: relative;
+            background: #000;
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .viewport-wrapper video,
+        .viewport-wrapper img {
+            width: 100%;
+            height: auto;
+            max-height: 600px;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Browser Webcam Controls */
+        .cam-controls {
+            padding: 12px 20px;
+            background: #162032;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        /* Image Upload Box */
+        .upload-dropzone {
+            width: 100%;
+            height: 100%;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            padding: 40px;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            margin: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .upload-dropzone:hover {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.02);
+        }
+        .upload-dropzone svg {
+            width: 48px;
+            height: 48px;
+            stroke: #64748b;
+        }
+
+        /* Sidebar Status */
+        .status-box {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .status-box h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+        #defect-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 140px;
+        }
+        #defect-list li {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .defect-alert {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            color: #fca5a5;
+        }
+        .normal-alert {
+            background: rgba(34, 197, 94, 0.1) !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
+            color: #86efac;
+        }
+        .meta-info {
+            margin-top: auto;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.75rem;
+            color: #64748b;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .meta-info code {
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .docs-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #38bdf8;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .docs-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="title-group">
+            <h1>Industrial Defect Vision AI</h1>
+            <p>Automated visual quality control with YOLOv8 & FastAPI</p>
+        </div>
+        <div class="controls-group">
+            <select id="model-select" class="model-select" onchange="changeModel(this.value)">
+                <option value="defect_best">Defect Classifier (YOLOv8-cls)</option>
+                <option value="best">Defect Detector (YOLOv8-det)</option>
+            </select>
+            <div class="live-badge">
+                <span class="pulse-dot"></span>
+                <span id="badge-label">READY</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('browser-cam')">📱 Browser Webcam</button>
+        <button class="tab-btn" onclick="switchTab('upload')">📁 Image Upload</button>
+        <button class="tab-btn" onclick="switchTab('server-cam')">📹 Hardware / Server Stream</button>
+    </div>
+
+    <!-- Main Content Workspace -->
+    <div class="defect-container">
+        <div class="video-box">
+            <h3 id="panel-title">
+                <span>Client Camera Feed</span>
+                <span style="font-size:0.75rem; font-family:'JetBrains Mono'; color:#64748b;" id="latency-label">FPS: --</span>
+            </h3>
+
+            <!-- Viewport 1: Browser Camera -->
+            <div id="view-browser-cam" class="viewport-wrapper">
+                <video id="webcam-video" autoplay playsinline muted style="display:none;"></video>
+                <canvas id="output-canvas" style="display:none;"></canvas>
+                <div id="cam-prompt" style="text-align:center; padding:30px;">
+                    <p style="color:#94a3b8; margin-bottom:16px;">Click below to activate device webcam for real-time defect inspection</p>
+                    <button class="btn" onclick="startWebcam()">Start Device Webcam</button>
+                </div>
+            </div>
+
+            <!-- Viewport 2: Image Upload -->
+            <div id="view-upload" class="viewport-wrapper" style="display:none;">
+                <div id="dropzone" class="upload-dropzone" onclick="document.getElementById('file-input').click()">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p>Click or drag test image here to inspect for defects</p>
+                    <span style="font-size:0.75rem; color:#64748b;">Supports JPG, PNG, WEBP</span>
+                </div>
+                <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+                <img id="upload-result-img" style="display:none;" alt="Inspection Result" />
+            </div>
+
+            <!-- Viewport 3: Server Hardware Stream -->
+            <div id="view-server-cam" class="viewport-wrapper" style="display:none;">
+                <img id="server-stream-img" src="/video_feed" alt="Hardware Live Defect Stream" />
+            </div>
+
+            <!-- Controls footer for Browser Webcam -->
+            <div id="cam-controls" class="cam-controls" style="display:none;">
+                <button class="btn btn-secondary" onclick="stopWebcam()">Stop Camera</button>
+                <span id="cam-status-text" style="font-size:0.8rem; color:#94a3b8;">Streaming live frames to /predict/frame</span>
+            </div>
+        </div>
+
+        <!-- Telemetry & Detection Status Sidebar -->
+        <div class="status-box">
+            <h3>Inspection Telemetry</h3>
+            <ul id="defect-list">
+                <li class="normal-alert"><strong>NORMAL</strong><span>Standby</span></li>
+            </ul>
+
+            <div class="meta-info">
+                <div>Active Model: <code id="info-model">defect_best.pt</code></div>
+                <div>API Docs: <a href="/docs" target="_blank" class="docs-link">FastAPI Swagger UI ↗</a></div>
+                <div>Status Polling: <code>1s</code></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTab = 'browser-cam';
+    let webcamStream = null;
+    let frameSendInterval = null;
+    let isProcessingFrame = false;
+
+    // Switch between UI tabs
+    function switchTab(tabId) {
+        currentTab = tabId;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.getElementById('view-browser-cam').style.display = (tabId === 'browser-cam') ? 'flex' : 'none';
+        document.getElementById('view-upload').style.display = (tabId === 'upload') ? 'flex' : 'none';
+        document.getElementById('view-server-cam').style.display = (tabId === 'server-cam') ? 'flex' : 'none';
+
+        const camControls = document.getElementById('cam-controls');
+        camControls.style.display = (tabId === 'browser-cam' && webcamStream) ? 'flex' : 'none';
+
+        const titleMap = {
+            'browser-cam': 'Browser Webcam Stream',
+            'upload': 'Single Image Inspection',
+            'server-cam': 'Hardware Server Feed'
+        };
+        document.getElementById('panel-title').firstElementChild.textContent = titleMap[tabId];
+    }
+
+    // Start Client Device Webcam
+    async function startWebcam() {
+        try {
+            webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+            const video = document.getElementById('webcam-video');
+            video.srcObject = webcamStream;
+            video.style.display = 'block';
+            document.getElementById('cam-prompt').style.display = 'none';
+            document.getElementById('cam-controls').style.display = 'flex';
+            document.getElementById('badge-label').textContent = 'LIVE CLIENT';
+
+            // Send frames every 120ms (~8 FPS for smooth responsive cloud inference)
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 480;
+            const ctx = canvas.getContext('2d');
+
+            frameSendInterval = setInterval(async () => {
+                if (!webcamStream || isProcessingFrame) return;
+                isProcessingFrame = true;
+
+                try {
+                    ctx.drawImage(video, 0, 0, 640, 480);
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.7);
+
+                    const t0 = performance.now();
+                    const res = await fetch('/predict/frame', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64Data })
+                    });
+                    const data = await res.json();
+                    const totalMs = Math.round(performance.now() - t0);
+                    document.getElementById('latency-label').textContent = `${data.inference_ms}ms inf | ${totalMs}ms RTT`;
+
+                    updateDefectUI(data.detections, data.status, data.confidence);
+                } catch (e) {
+                    console.error("Frame inspection failed:", e);
+                } finally {
+                    isProcessingFrame = false;
+                }
+            }, 120);
+
+        } catch (err) {
+            alert('Could not access camera: ' + err.message);
+        }
+    }
+
+    function stopWebcam() {
+        if (webcamStream) {
+            webcamStream.getTracks().forEach(track => track.stop());
+            webcamStream = null;
+        }
+        clearInterval(frameSendInterval);
+        document.getElementById('webcam-video').style.display = 'none';
+        document.getElementById('cam-prompt').style.display = 'block';
+        document.getElementById('cam-controls').style.display = 'none';
+        document.getElementById('badge-label').textContent = 'STANDBY';
+        document.getElementById('latency-label').textContent = 'FPS: --';
+    }
+
+    // Handle File Upload Inspection
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const listElement = document.getElementById('defect-list');
+        listElement.innerHTML = '<li>Analyzing image...</li>';
+
+        try {
+            const res = await fetch('/predict/image', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.annotated_image) {
+                const img = document.getElementById('upload-result-img');
+                img.src = data.annotated_image;
+                img.style.display = 'block';
+                document.getElementById('dropzone').style.display = 'none';
+            }
+
+            document.getElementById('latency-label').textContent = `${data.inference_ms}ms inference`;
+            updateDefectUI(data.detections, data.top_class, data.top_confidence);
+        } catch (err) {
+            listElement.innerHTML = '<li style="color:#f87171;">Analysis failed</li>';
+        }
+    }
+
+    // Dynamic Model Switcher
+    async function changeModel(modelId) {
+        try {
+            const res = await fetch('/models/select', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model_id: modelId })
+            });
+            const data = await res.json();
+            document.getElementById('info-model').textContent = `${modelId}.pt`;
+        } catch (e) {
+            console.error("Model switch failed:", e);
+        }
+    }
+
+    // Update Telemetry List
+    function updateDefectUI(detections, status, confidence) {
+        const listElement = document.getElementById('defect-list');
+        if (!detections || detections.length === 0) {
+            listElement.innerHTML = '<li class="normal-alert"><strong>NORMAL</strong><span>No defect detected</span></li>';
+        } else {
+            let html = '';
+            detections.forEach(item => {
+                html += `<li class="defect-alert"><strong>${item.class.toUpperCase()}</strong><span>${item.confidence}%</span></li>`;
+            });
+            listElement.innerHTML = html;
+        }
+    }
+
+    // Polling detect_status for server-cam mode
+    setInterval(async () => {
+        if (currentTab !== 'server-cam') return;
+        try {
+            const res = await fetch('/detect_status');
+            const data = await res.json();
+            updateDefectUI(data.detections);
+        } catch (err) {
+            // Ignore if in cloud
+        }
+    }, 1000);
+</script>
+
+</body>
+</html>
