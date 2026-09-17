@@ -41,11 +41,24 @@ def video_feed():
 @app.get("/", response_class=HTMLResponse)
 def index():
     return """
-    <!DOCTYPE html>blob:https://web.whatsapp.com/bb4357a5-44e6-4988-a561-334aa7db5d52
+    <!DOCTYPE html>
     <html>
+    <head>
+        <title>Live Machine Defect Detection Feed</title>
+        <style>
+            body { background: #0f172a; color: #f8fafc; font-family: sans-serif; text-align: center; padding: 24px; }
+            img { max-width: 90%; border: 2px solid #334155; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+            h2 { margin-bottom: 16px; font-weight: 600; }
+        </style>
+    </head>
     <body>
         <h2>Live Machine Defect Detection Feed</h2>
         <img src="/video_feed" alt="Camera Stream" />
     </body>
     </html>
     """
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+
