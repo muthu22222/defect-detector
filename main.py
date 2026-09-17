@@ -150,12 +150,23 @@ def run_inference_on_frame(frame: np.ndarray, yolo_model):
 
 def hardware_camera_worker():
     """Background frame capture loop for local edge/hardware setups."""
-    global latest_frame_bytes, latest_detection, is_running
+    global latest_frame_bytes, latest_detection, is_running, has_hardware_cam
+    fail_count = 0
     while is_running and has_hardware_cam:
         success, frame = camera.read()
         if not success:
-            time.sleep(0.05)
+            fail_count += 1
+            if fail_count > 5:
+                print("[INFO] Local camera unavailable or busy. Switching to Cloud/Standby mode.")
+                has_hardware_cam = False
+                try:
+                    camera.release()
+                except Exception:
+                    pass
+                break
+            time.sleep(0.5)
             continue
+        fail_count = 0
 
         with model_lock:
             m = active_yolo
